@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.user.defs",
+  "defs": {
+    "preferences": {
+      "type": "object",
+      "description": "User preferences for Orbits app",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "enum": ["light", "dark", "auto"],
+          "default": "auto"
+        },
+        "defaultOrbitView": {
+          "type": "string",
+          "enum": ["grid", "list", "cards"],
+          "default": "grid"
+        },
+        "autoRefreshFeeds": {"type": "boolean", "default": true},
+        "notificationSettings": {
+          "type": "object",
+          "properties": {
+            "newFeedItems": {"type": "boolean", "default": true},
+            "orbitUpdates": {"type": "boolean", "default": true},
+            "weeklyDigest": {"type": "boolean", "default": false}
+          }
+        },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "shareOrbitsPublicly": {"type": "boolean", "default": false},
+            "allowDiscovery": {"type": "boolean", "default": true}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.feed.defs",
+  "defs": {
+    "feed": {
+      "type": "object",
+      "description": "A content feed definition for Orbits app",
+      "required": ["name", "type", "createdAt"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name for the feed",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "type": {
+          "type": "string",
+          "enum": ["video", "photo", "text"],
+          "description": "Media type this feed contains"
+        },
+        "source": {
+          "type": "string",
+          "format": "uri",
+          "description": "External feed URL or AT-URI"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "maxItems": 20,
+          "description": "Tags for categorization"
+        },
+        "isPublic": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this feed is publicly discoverable"
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "refreshInterval": {"type": "integer", "minimum": 300},
+            "maxItems": {"type": "integer", "minimum": 10, "maximum": 1000}
+          }
+        },
+        "createdAt": {"type": "string", "format": "datetime"},
+        "updatedAt": {"type": "string", "format": "datetime"}
+      }
+    }
+  }
+}
