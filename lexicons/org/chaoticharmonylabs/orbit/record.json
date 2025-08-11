@@ -1,0 +1,14 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbit.record",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "ref",
+        "ref": "org.chaoticharmonylabs.orbit.defs#orbit"
+      }
+    }
+  }
+}

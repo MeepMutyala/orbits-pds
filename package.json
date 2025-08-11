@@ -6,11 +6,16 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts"
+    "dev": "ts-node src/server.ts",
+    "test": "node test-lexicons.js",
+    "test:lexicons": "node test-lexicons.js"
   },
   "dependencies": {
+    "@atproto/lexicon": "^0.4.12",
     "@atproto/pds": "^0.4.0",
-    "dotenv": "^16.6.1"
+    "@atproto/xrpc-server": "^0.9.0",
+    "dotenv": "^16.6.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@types/node": "^20.19.7",

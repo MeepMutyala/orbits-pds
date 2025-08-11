@@ -1,52 +1,44 @@
 {
+  "$type": "com.atproto.lexicon.schema",
   "lexicon": 1,
   "id": "org.chaoticharmonylabs.feed.defs",
   "defs": {
     "feed": {
       "type": "object",
-      "description": "A content feed definition for Orbits app",
-      "required": ["name", "type", "createdAt"],
+      "description": "A content feed for a specific type (video, photo, text).",
+      "required": ["name", "contentType", "createdAt"],
       "properties": {
         "name": {
           "type": "string",
-          "description": "Display name for the feed",
+          "description": "The name of the feed.",
           "minLength": 1,
-          "maxLength": 100
-        },
-        "type": {
-          "type": "string",
-          "enum": ["video", "photo", "text"],
-          "description": "Media type this feed contains"
-        },
-        "source": {
-          "type": "string",
-          "format": "uri",
-          "description": "External feed URL or AT-URI"
+          "maxLength": 64
         },
         "description": {
           "type": "string",
-          "maxLength": 500
+          "description": "Optional description of the feed.",
+          "maxLength": 256
         },
-        "tags": {
-          "type": "array",
-          "items": {"type": "string"},
-          "maxItems": 20,
-          "description": "Tags for categorization"
+        "contentType": {
+          "type": "string",
+          "enum": ["video", "photo", "text"],
+          "description": "The type of content this feed contains."
         },
-        "isPublic": {
+        "isActive": {
           "type": "boolean",
           "default": true,
-          "description": "Whether this feed is publicly discoverable"
+          "description": "Whether this feed is currently active."
         },
-        "settings": {
-          "type": "object",
-          "properties": {
-            "refreshInterval": {"type": "integer", "minimum": 300},
-            "maxItems": {"type": "integer", "minimum": 10, "maximum": 1000}
-          }
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the feed was created."
         },
-        "createdAt": {"type": "string", "format": "datetime"},
-        "updatedAt": {"type": "string", "format": "datetime"}
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the feed was last updated."
+        }
       }
     }
   }

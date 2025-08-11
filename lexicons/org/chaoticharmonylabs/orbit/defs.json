@@ -1,4 +1,5 @@
 {
+  "$type": "com.atproto.lexicon.schema",
   "lexicon": 1,
   "id": "org.chaoticharmonylabs.orbit.defs",
   "defs": {
@@ -16,20 +17,36 @@
         "description": {
           "type": "string",
           "description": "Optional description of the orbit.",
-          "maxLength": 256
+          "maxLength": 500
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color like #RRGGBB",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "maxLength": 7
+        },
+        "isVisible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this orbit is visible in the UI"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Display order of this orbit"
         },
         "feeds": {
           "type": "object",
-          "description": "Feed URIs included in this orbit (max 1 per type).",
+          "description": "Feed URIs included in this orbit (one per type).",
           "properties": {
             "video": {
-              "type": "string",
+              "type": "string", 
               "format": "at-uri",
               "description": "Video feed URI"
             },
             "photo": {
               "type": "string",
-              "format": "at-uri",
+              "format": "at-uri", 
               "description": "Photo feed URI"
             },
             "text": {
