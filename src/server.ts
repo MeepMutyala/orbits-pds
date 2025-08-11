@@ -1,5 +1,6 @@
-import { PDS } from '@atproto/pds'
+import { PDS, createLexiconServer, envToCfg, envToSecrets, readEnv } from '@atproto/pds'
 import { Lexicons } from '@atproto/lexicon'
+import { createServer } from '@atproto/xrpc-server'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
@@ -9,28 +10,40 @@ dotenv.config()
 class OrbitsPDS {
   private pds: PDS | null = null
   private lexicons: Map<string, any> = new Map()
+  private lexiconResolver: Lexicons | null = null
 
   constructor() {
     this.loadCustomLexicons()
   }
 
   private loadCustomLexicons() {
-    const lexiconDir = path.join(__dirname, '../lexicons/org/chaoticharmonylabs/orbit')
+    const baseDir = path.join(__dirname, '../lexicons/org/chaoticharmonylabs')
     
     try {
-      const files = fs.readdirSync(lexiconDir)
+      const schemas = ['orbit', 'feed', 'user']
       
-      for (const file of files) {
-        if (file.endsWith('.json')) {
-          const filePath = path.join(lexiconDir, file)
-          const lexiconData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+      for (const schema of schemas) {
+        const lexiconDir = path.join(baseDir, schema)
+        
+        if (fs.existsSync(lexiconDir)) {
+          const files = fs.readdirSync(lexiconDir)
           
-          if (lexiconData.id) {
-            this.lexicons.set(lexiconData.id, lexiconData)
-            console.log(`📋 Loaded lexicon: ${lexiconData.id}`)
+          for (const file of files) {
+            if (file.endsWith('.json')) {
+              const filePath = path.join(lexiconDir, file)
+              const lexiconData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+              
+              if (lexiconData.id) {
+                this.lexicons.set(lexiconData.id, lexiconData)
+                console.log(`📋 Loaded lexicon: ${lexiconData.id}`)
+              }
+            }
           }
         }
       }
+      
+      // Initialize lexicon resolver
+      this.lexiconResolver = new Lexicons(Array.from(this.lexicons.values()))
     } catch (error) {
       console.error('Error loading lexicons:', error)
     }
@@ -40,79 +53,149 @@ class OrbitsPDS {
     const hostname = process.env.PDS_HOSTNAME || 'localhost'
     const port = parseInt(process.env.PORT || '3000')
     
-    const config = {
-      service: {
-        port,
-        hostname,
-        did: process.env.SERVICE_DID || `did:web:${hostname}`,
-        blobUploadLimit: parseInt(process.env.PDS_BLOB_UPLOAD_LIMIT || '52428800'),
-      },
-      db: {
-        postgresUrl: process.env.DATABASE_URL || 'postgres://postgres:password@localhost:5432/orbits_pds',
-      },
-      actorStore: {
-        directory: process.env.PDS_DATA_DIRECTORY || './data',
-      },
-      blobstore: {
-        provider: 'disk' as const,
-        location: process.env.PDS_BLOBSTORE_DISK_LOCATION || './data/blocks',
-      },
-      identity: {
-        plcUrl: process.env.PDS_DID_PLC_URL || 'https://plc.directory',
-        recoveryKey: process.env.RECOVERY_KEY || 'default-recovery-key',
-      },
-      invites: {
-        required: process.env.INVITE_REQUIRED === 'true',
-        interval: process.env.USER_INVITE_INTERVAL ? parseInt(process.env.USER_INVITE_INTERVAL) : null,
-      },
-      subscription: {
-        repoBackfillLimitMs: 60000,
-      },
-      rateLimits: {
-        enabled: process.env.NODE_ENV === 'production',
-      },
-      appView: {
-        url: process.env.PDS_BSKY_APP_VIEW_URL || 'https://api.bsky.app',
-        did: process.env.PDS_BSKY_APP_VIEW_DID || 'did:web:api.bsky.app',
-      },
-      reportService: {
-        url: process.env.PDS_REPORT_SERVICE_URL || 'https://mod.bsky.app',
-        did: process.env.PDS_REPORT_SERVICE_DID || 'did:plc:ar7c4by46qjdydhdevvrndac',
-      },
-      crawlers: process.env.PDS_CRAWLERS?.split(',') || ['https://bsky.network'],
+    try {
+      // Simple configuration for development - use environment variables
+      process.env.NODE_ENV = process.env.NODE_ENV || 'development'
+      process.env.PDS_HOSTNAME = hostname
+      process.env.PORT = port.toString()
+      process.env.PDS_DATA_DIRECTORY = process.env.PDS_DATA_DIRECTORY || './data'
+      process.env.JWT_SECRET = process.env.JWT_SECRET || 'unsafe-dev-secret-change-in-production'
+      process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
+      
+      // Create PDS with environment-based configuration
+      const env = readEnv()
+      const config = envToCfg(env)
+      const secrets = envToSecrets(env)
+      
+      this.pds = await PDS.create(config, secrets)
+      
+      // Register custom lexicons after PDS creation
+      await this.registerCustomLexicons()
+      
+      await this.pds.start()
+      
+      console.log(`🚀 Orbits PDS running on port ${port}`)
+      console.log(`🌐 Service DID: ${process.env.SERVICE_DID || `did:web:${hostname}`}`)
+      console.log(`🔗 XRPC endpoint: http://${hostname}:${port}/xrpc`)
+      console.log(`📝 Registered ${this.lexicons.size} custom lexicons`)
+      
+      this.setupGracefulShutdown()
+    } catch (error) {
+      console.error('❌ Failed to start PDS:', error)
+      throw error
     }
-
-    const secrets = {
-      jwtSecret: process.env.JWT_SECRET || 'unsafe-dev-secret-change-in-production',
-      adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
-      plcRotationKey: process.env.RECOVERY_KEY || 'default-recovery-key',
-    }
-    
-    this.pds = await PDS.create(config, secrets)
-    
-    // Register custom lexicons
-    await this.registerCustomLexicons()
-    
-    await this.pds.start()
-    
-    console.log(`🚀 Orbits PDS running on port ${config.port}`)
-    console.log(`🌐 Service DID: ${config.serviceDid}`)
-    console.log(`🔗 XRPC endpoint: http://${config.hostname}:${config.port}/xrpc`)
-    console.log(`📝 Registered ${this.lexicons.size} custom lexicons`)
-    
-    this.setupGracefulShutdown()
   }
 
   private async registerCustomLexicons() {
-    for (const [id, lexicon] of this.lexicons) {
-      try {
-        // Register lexicon with the PDS
-        // This depends on the PDS implementation details
-        console.log(`✅ Registered lexicon: ${id}`)
-      } catch (error) {
-        console.error(`❌ Failed to register lexicon ${id}:`, error)
+    if (!this.pds || !this.lexiconResolver) return
+    
+    // Create a custom XRPC server for our lexicons
+    const xrpcServer = createServer(Array.from(this.lexicons.values()))
+    
+    // Register handlers for orbit operations
+    this.registerOrbitHandlers(xrpcServer)
+    
+    // Mount the custom lexicon routes on the PDS
+    // This is where we would integrate with the PDS XRPC server
+    console.log(`✅ Custom lexicon server created with ${this.lexicons.size} lexicons`)
+  }
+
+  private registerOrbitHandlers(xrpcServer: any) {
+    // Register CREATE orbit handler
+    xrpcServer.method('org.chaoticharmonylabs.orbit.create', async (ctx: any) => {
+      const { input } = ctx
+      
+      // Validate input against lexicon
+      if (!input.name) {
+        throw new Error('Name is required')
       }
-    }
+      
+      // Here you would typically save to database
+      // For now, we'll just return a mock response
+      const uri = `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/${Date.now()}`
+      const cid = 'bafyrei' + Math.random().toString(36).substring(7)
+      
+      console.log(`📝 Creating orbit: ${input.name}`)
+      
+      return {
+        uri,
+        cid,
+      }
+    })
+    
+    // Register GET orbit handler
+    xrpcServer.method('org.chaoticharmonylabs.orbit.get', async (ctx: any) => {
+      const { params } = ctx
+      
+      if (!params.uri) {
+        throw new Error('URI is required')
+      }
+      
+      console.log(`📖 Getting orbit: ${params.uri}`)
+      
+      // Mock response - in a real implementation, you'd fetch from database
+      return {
+        uri: params.uri,
+        cid: 'bafyrei' + Math.random().toString(36).substring(7),
+        value: {
+          name: 'Example Orbit',
+          description: 'A sample orbit for testing',
+          createdAt: new Date().toISOString(),
+          feeds: {}
+        }
+      }
+    })
+    
+    // Register LIST orbits handler
+    xrpcServer.method('org.chaoticharmonylabs.orbit.list', async (ctx: any) => {
+      const { params } = ctx
+      const limit = params.limit || 50
+      
+      console.log(`📋 Listing orbits (limit: ${limit})`)
+      
+      // Mock response - in a real implementation, you'd fetch from database
+      return {
+        orbits: [
+          {
+            uri: `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1`,
+            cid: 'bafyrei' + Math.random().toString(36).substring(7),
+            value: {
+              name: 'Photography',
+              description: 'Photos and visual content',
+              createdAt: new Date().toISOString(),
+              feeds: {}
+            }
+          },
+          {
+            uri: `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/2`,
+            cid: 'bafyrei' + Math.random().toString(36).substring(7),
+            value: {
+              name: 'Philosophy',
+              description: 'Deep thoughts and discussions',
+              createdAt: new Date().toISOString(),
+              feeds: {}
+            }
+          }
+        ]
+      }
+    })
+    
+    // Register UPDATE orbit handler
+    xrpcServer.method('org.chaoticharmonylabs.orbit.update', async (ctx: any) => {
+      const { input } = ctx
+      
+      if (!input.uri) {
+        throw new Error('URI is required')
+      }
+      
+      console.log(`✏️ Updating orbit: ${input.uri}`)
+      
+      // Mock response - in a real implementation, you'd update in database
+      return {
+        uri: input.uri,
+        cid: 'bafyrei' + Math.random().toString(36).substring(7),
+      }
+    })
   }
 
   private setupGracefulShutdown() {
