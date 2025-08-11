@@ -1,9 +1,9 @@
-import { PDS, createLexiconServer, envToCfg, envToSecrets, readEnv } from '@atproto/pds'
+import { PDS, envToCfg, envToSecrets, readEnv } from '@atproto/pds'
 import { Lexicons } from '@atproto/lexicon'
-import { createServer } from '@atproto/xrpc-server'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
+import { requireAdmin } from './auth'
 
 dotenv.config()
 
@@ -11,6 +11,7 @@ class OrbitsPDS {
   private pds: PDS | null = null
   private lexicons: Map<string, any> = new Map()
   private lexiconResolver: Lexicons | null = null
+  private ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
 
   constructor() {
     this.loadCustomLexicons()
@@ -69,7 +70,7 @@ class OrbitsPDS {
       
       this.pds = await PDS.create(config, secrets)
       
-      // Register custom lexicons after PDS creation
+      // Register custom lexicons and handlers after PDS creation but before start
       await this.registerCustomLexicons()
       
       await this.pds.start()
@@ -78,6 +79,7 @@ class OrbitsPDS {
       console.log(`🌐 Service DID: ${process.env.SERVICE_DID || `did:web:${hostname}`}`)
       console.log(`🔗 XRPC endpoint: http://${hostname}:${port}/xrpc`)
       console.log(`📝 Registered ${this.lexicons.size} custom lexicons`)
+      console.log(`🔒 Admin endpoints protected with header authentication`)
       
       this.setupGracefulShutdown()
     } catch (error) {
@@ -89,112 +91,164 @@ class OrbitsPDS {
   private async registerCustomLexicons() {
     if (!this.pds || !this.lexiconResolver) return
     
-    // Create a custom XRPC server for our lexicons
-    const xrpcServer = createServer(Array.from(this.lexicons.values()))
+    // Debug what's available on the PDS instance
+    console.log('🔍 PDS structure:')
+    console.log('- Available properties:', Object.keys(this.pds))
     
-    // Register handlers for orbit operations
-    this.registerOrbitHandlers(xrpcServer)
-    
-    // Mount the custom lexicon routes on the PDS
-    // This is where we would integrate with the PDS XRPC server
-    console.log(`✅ Custom lexicon server created with ${this.lexicons.size} lexicons`)
+    try {
+      // Method 1: Try to access the PDS server/app to add middleware
+      if (this.pds.app) {
+        console.log('✅ Found Express app - adding custom routes')
+        
+        // Add custom XRPC method handlers directly to the Express app
+        this.pds.app.post('/xrpc/org.chaoticharmonylabs.orbit.create', async (req, res) => {
+          try {
+            await this.handleCreateOrbit(req, res)
+          } catch (error: any) {
+            console.error('Error in orbit.create:', error)
+            res.status(error.status || 500).json({ 
+              error: error.message || 'Internal server error' 
+            })
+          }
+        })
+        
+        this.pds.app.post('/xrpc/org.chaoticharmonylabs.orbit.update', async (req, res) => {
+          try {
+            await this.handleUpdateOrbit(req, res)
+          } catch (error: any) {
+            console.error('Error in orbit.update:', error)
+            res.status(error.status || 500).json({ 
+              error: error.message || 'Internal server error' 
+            })
+          }
+        })
+        
+        this.pds.app.get('/xrpc/org.chaoticharmonylabs.orbit.get', async (req, res) => {
+          try {
+            await this.handleGetOrbit(req, res)
+          } catch (error: any) {
+            console.error('Error in orbit.get:', error)
+            res.status(error.status || 500).json({ 
+              error: error.message || 'Internal server error' 
+            })
+          }
+        })
+        
+        this.pds.app.get('/xrpc/org.chaoticharmonylabs.orbit.list', async (req, res) => {
+          try {
+            await this.handleListOrbits(req, res)
+          } catch (error: any) {
+            console.error('Error in orbit.list:', error)
+            res.status(error.status || 500).json({ 
+              error: error.message || 'Internal server error' 
+            })
+          }
+        })
+        
+        console.log('✅ Custom orbit handlers registered as Express routes')
+        return
+      }
+      
+      console.log('⚠️ No suitable integration method found')
+      console.log('Custom lexicons loaded but handlers not registered')
+      
+    } catch (error) {
+      console.error('❌ Error registering custom lexicons:', error)
+    }
   }
 
-  private registerOrbitHandlers(xrpcServer: any) {
-    // Register CREATE orbit handler
-    xrpcServer.method('org.chaoticharmonylabs.orbit.create', async (ctx: any) => {
-      const { input } = ctx
-      
-      // Validate input against lexicon
-      if (!input.name) {
-        throw new Error('Name is required')
-      }
-      
-      // Here you would typically save to database
-      // For now, we'll just return a mock response
-      const uri = `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/${Date.now()}`
-      const cid = 'bafyrei' + Math.random().toString(36).substring(7)
-      
-      console.log(`📝 Creating orbit: ${input.name}`)
-      
-      return {
-        uri,
-        cid,
+  // Handler implementations using proper Express req/res pattern
+  private async handleCreateOrbit(req: any, res: any) {
+    // Require admin authentication
+    requireAdmin(req.headers || {}, this.ADMIN_PASSWORD)
+    
+    const input = req.body
+    
+    // Validate input against lexicon
+    if (!input || !input.name) {
+      throw new Error('Name is required')
+    }
+    
+    // Here you would typically save to database
+    // For now, we'll just return a mock response
+    const uri = `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/${Date.now()}`
+    const cid = 'bafyrei' + Math.random().toString(36).substring(7)
+    
+    console.log(`📝 Creating orbit: ${input.name}`)
+    
+    res.json({
+      uri,
+      cid,
+    })
+  }
+
+  private async handleUpdateOrbit(req: any, res: any) {
+    // Require admin authentication
+    requireAdmin(req.headers || {}, this.ADMIN_PASSWORD)
+    
+    const input = req.body
+    
+    if (!input || !input.uri) {
+      throw new Error('URI is required')
+    }
+    
+    console.log(`✏️ Updating orbit: ${input.uri}`)
+    
+    res.json({
+      uri: input.uri,
+      cid: 'bafyrei' + Math.random().toString(36).substring(7),
+    })
+  }
+
+  private async handleGetOrbit(req: any, res: any) {
+    const { uri } = req.query
+    
+    if (!uri) {
+      throw new Error('URI is required')
+    }
+    
+    console.log(`📖 Getting orbit: ${uri}`)
+    
+    res.json({
+      uri: uri,
+      cid: 'bafyrei' + Math.random().toString(36).substring(7,),
+      value: {
+        name: 'Example Orbit',
+        description: 'A sample orbit for testing',
+        createdAt: new Date().toISOString(),
+        feeds: {}
       }
     })
+  }
+
+  private async handleListOrbits(req: any, res: any) {
+    const limit = parseInt(req.query.limit as string) || 50
     
-    // Register GET orbit handler
-    xrpcServer.method('org.chaoticharmonylabs.orbit.get', async (ctx: any) => {
-      const { params } = ctx
-      
-      if (!params.uri) {
-        throw new Error('URI is required')
-      }
-      
-      console.log(`📖 Getting orbit: ${params.uri}`)
-      
-      // Mock response - in a real implementation, you'd fetch from database
-      return {
-        uri: params.uri,
-        cid: 'bafyrei' + Math.random().toString(36).substring(7),
-        value: {
-          name: 'Example Orbit',
-          description: 'A sample orbit for testing',
-          createdAt: new Date().toISOString(),
-          feeds: {}
-        }
-      }
-    })
+    console.log(`📋 Listing orbits (limit: ${limit})`)
     
-    // Register LIST orbits handler
-    xrpcServer.method('org.chaoticharmonylabs.orbit.list', async (ctx: any) => {
-      const { params } = ctx
-      const limit = params.limit || 50
-      
-      console.log(`📋 Listing orbits (limit: ${limit})`)
-      
-      // Mock response - in a real implementation, you'd fetch from database
-      return {
-        orbits: [
-          {
-            uri: `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1`,
-            cid: 'bafyrei' + Math.random().toString(36).substring(7),
-            value: {
-              name: 'Photography',
-              description: 'Photos and visual content',
-              createdAt: new Date().toISOString(),
-              feeds: {}
-            }
-          },
-          {
-            uri: `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/2`,
-            cid: 'bafyrei' + Math.random().toString(36).substring(7),
-            value: {
-              name: 'Philosophy',
-              description: 'Deep thoughts and discussions',
-              createdAt: new Date().toISOString(),
-              feeds: {}
-            }
+    res.json({
+      orbits: [
+        {
+          uri: `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1`,
+          cid: 'bafyrei' + Math.random().toString(36).substring(7),
+          value: {
+            name: 'Photography',
+            description: 'Photos and visual content',
+            createdAt: new Date().toISOString(),
+            feeds: {}
           }
-        ]
-      }
-    })
-    
-    // Register UPDATE orbit handler
-    xrpcServer.method('org.chaoticharmonylabs.orbit.update', async (ctx: any) => {
-      const { input } = ctx
-      
-      if (!input.uri) {
-        throw new Error('URI is required')
-      }
-      
-      console.log(`✏️ Updating orbit: ${input.uri}`)
-      
-      // Mock response - in a real implementation, you'd update in database
-      return {
-        uri: input.uri,
-        cid: 'bafyrei' + Math.random().toString(36).substring(7),
-      }
+        },
+        {
+          uri: `at://did:web:localhost/org.chaoticharmonylabs.orbit.record/2`,
+          cid: 'bafyrei' + Math.random().toString(36).substring(7),
+          value: {
+            name: 'Philosophy',
+            description: 'Deep thoughts and discussions',
+            createdAt: new Date().toISOString(),
+            feeds: {}
+          }
+        }
+      ]
     })
   }
 
