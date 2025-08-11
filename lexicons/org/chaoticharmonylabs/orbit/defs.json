@@ -17,20 +17,23 @@
         "description": {
           "type": "string",
           "description": "Optional description of the orbit.",
-          "maxLength": 256
+          "maxLength": 500
         },
         "color": {
           "type": "string",
           "description": "Hex color like #RRGGBB",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
           "maxLength": 7
         },
         "isVisible": {
           "type": "boolean",
-          "default": true
+          "default": true,
+          "description": "Whether this orbit is visible in the UI"
         },
         "order": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Display order of this orbit"
         },
         "feeds": {
           "type": "object",

@@ -5,33 +5,36 @@
   "defs": {
     "preferences": {
       "type": "object",
-      "description": "User preferences for Orbits app",
+      "description": "User preferences for the Orbits application.",
       "properties": {
         "theme": {
           "type": "string",
           "enum": ["light", "dark", "auto"],
-          "default": "auto"
+          "default": "auto",
+          "description": "UI theme preference"
         },
         "defaultOrbitView": {
           "type": "string",
-          "enum": ["grid", "list", "cards"],
-          "default": "grid"
+          "enum": ["grid", "list", "compact"],
+          "default": "grid",
+          "description": "Default view mode for orbits"
         },
-        "autoRefreshFeeds": {"type": "boolean", "default": true},
-        "notificationSettings": {
-          "type": "object",
-          "properties": {
-            "newFeedItems": {"type": "boolean", "default": true},
-            "orbitUpdates": {"type": "boolean", "default": true},
-            "weeklyDigest": {"type": "boolean", "default": false}
-          }
+        "autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh feeds"
         },
-        "privacy": {
-          "type": "object",
-          "properties": {
-            "shareOrbitsPublicly": {"type": "boolean", "default": false},
-            "allowDiscovery": {"type": "boolean", "default": true}
-          }
+        "refreshInterval": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600,
+          "default": 300,
+          "description": "Auto-refresh interval in seconds"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when preferences were last updated."
         }
       }
     }
