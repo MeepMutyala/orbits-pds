@@ -131,48 +131,7 @@ class OrbitsPDS {
         console.log('✅ SUCCESS: Custom lexicon methods merged into PDS XRPC router (Method 1)')
         return
       }
-      
-      // // Method 2: Add lexicons to existing XRPC server
-      // if ((this.pds as any).xrpc?.addLexicons && typeof (this.pds as any).xrpc.addLexicons === 'function') {
-      //   ;(this.pds as any).xrpc.addLexicons(Array.from(this.lexicons.values()))
-      //   // Re-register handlers on the main PDS XRPC server
-      //   this.registerOrbitHandlers((this.pds as any).xrpc)
-      //   console.log('✅ SUCCESS: Custom lexicons added to PDS XRPC server (Method 2)')
-      //   return
-      // }
-      
-      // // Method 3: Mount as Express middleware with router
-      // if ((this.pds as any).app?.use && (this.xrpc as any).router) {
-      //   ;(this.pds as any).app.use('/xrpc', (this.xrpc as any).router)
-      //   console.log('✅ SUCCESS: Custom lexicon router mounted on /xrpc (Method 3)')
-      //   return
-      // }
-      
-      // // Method 4: Direct Express route mounting with handler
-      // if ((this.pds as any).app && (this.xrpc as any).handler) {
-      //   console.log('🔌 Attempting Express middleware integration (Method 4)...')
-      //   ;(this.pds as any).app.use('/xrpc', (req: any, res: any, next: any) => {
-      //     const urlPath = req.url || req.path || ''
-      //     const methodName = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath
-      //     const nsid = methodName.split('?')[0] // Remove query parameters
-          
-      //     if (nsid.startsWith('org.chaoticharmonylabs.orbit.')) {
-      //       console.log(`🎯 Intercepting custom method: ${nsid}`)
-      //       try {
-      //         return (this.xrpc as any).handler(req, res)
-      //       } catch (error) {
-      //         console.error('Error in custom XRPC handler:', error)
-      //         res.status(500).json({ error: 'Internal server error' })
-      //         return
-      //       }
-      //     }
-          
-      //     next()
-      //   })
-      //   console.log('✅ SUCCESS: Custom XRPC handler mounted as middleware (Method 4)')
-      //   return
-      // }
-      
+      console.log(typeof (this.xrpc as any).router)
       console.warn('⚠️ FAILED: Could not attach custom XRPC to PDS. Check PDS API version.')
       console.warn('Available PDS properties:', Object.keys(this.pds || {}))
       if (this.xrpc) {
