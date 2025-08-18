@@ -78,7 +78,7 @@ class OrbitsPDS {
       
       const customApp = express();
       customApp.use(express.json());
-      customApp.use("/xrpc", (req, res) => (this.xrpc as any).router(req, res));
+      customApp.use("/xrpc", (this.xrpc as any).router);
       customApp.listen(3100, () => {
         console.log("🔹 Custom XRPC endpoints server started at http://localhost:3100/xrpc");
       });
