@@ -5,6 +5,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
 import { requireAdmin, xrpcError } from './auth'
+import express from "express";
 
 dotenv.config()
 
@@ -75,6 +76,13 @@ class OrbitsPDS {
       // Create and mount custom XRPC before starting the PDS
       await this.registerCustomLexicons()
       
+      const customApp = express();
+      customApp.use(express.json());
+      customApp.use("/xrpc", (req, res) => (this.xrpc as any).router(req, res));
+      customApp.listen(3100, () => {
+        console.log("🔹 Custom XRPC endpoints server started at http://localhost:3100/xrpc");
+      });
+
       await this.pds.start()
       
       console.log(`🚀 Orbits PDS running on port ${port}`)
