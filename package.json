@@ -13,6 +13,7 @@
   "dependencies": {
     "@atproto/lexicon": "^0.4.12",
     "@atproto/pds": "^0.4.0",
+    "@atproto/syntax": "^0.4.0",
     "@atproto/xrpc-server": "^0.9.0",
     "dotenv": "^16.6.1",
     "node-fetch": "^3.3.2"
