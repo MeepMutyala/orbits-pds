@@ -188,6 +188,7 @@ class OrbitsPDS {
     console.log("Registering Orbit Handlers!");
     // LIST (public)
     xrpcServer.method('org.chaoticharmonylabs.orbit.list', async (ctx: any) => {
+      console.log("orbit.list handler reached!");
       try {
         // Parse parameters from various sources
         const limit = Number(
@@ -325,6 +326,7 @@ class OrbitsPDS {
       }
     })
     console.log("Registered handler for org.chaoticharmonylabs.orbit.update");
+    console.log("Available XRPC Methods:", Object.keys((xrpcServer as any).methods || {}));
   }
 
   private async parseInput(ctx: any): Promise<any> {
