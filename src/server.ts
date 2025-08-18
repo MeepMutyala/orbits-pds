@@ -78,6 +78,7 @@ class OrbitsPDS {
       
       const customApp = express();
       customApp.use(express.json());
+      console.log("XRPC instance:", this.xrpc);
       customApp.use("/xrpc", (this.xrpc as any).router);
       customApp.listen(3100, () => {
         console.log("🔹 Custom XRPC endpoints server started at http://localhost:3100/xrpc");
@@ -184,6 +185,7 @@ class OrbitsPDS {
   }
 
   private registerOrbitHandlers(xrpcServer: XrpcServer) {
+    console.log("Registering Orbit Handlers!");
     // LIST (public)
     xrpcServer.method('org.chaoticharmonylabs.orbit.list', async (ctx: any) => {
       try {
@@ -228,6 +230,7 @@ class OrbitsPDS {
         throw xrpcError('InternalServerError', `Failed to list orbits: ${error.message}`)
       }
     })
+    console.log("Registered handler for org.chaoticharmonylabs.orbit.list");
 
     // GET (public)
     xrpcServer.method('org.chaoticharmonylabs.orbit.get', async (ctx: any) => {
@@ -257,6 +260,8 @@ class OrbitsPDS {
         throw xrpcError('InternalServerError', `Failed to get orbit: ${error.message}`)
       }
     })
+    console.log("Registered handler for org.chaoticharmonylabs.orbit.get");
+
 
     // CREATE (admin)
     xrpcServer.method('org.chaoticharmonylabs.orbit.create', async (ctx: any) => {
@@ -293,6 +298,7 @@ class OrbitsPDS {
         throw xrpcError('InternalServerError', `Failed to create orbit: ${error.message}`)
       }
     })
+    console.log("Registered handler for org.chaoticharmonylabs.orbit.create");
 
     // UPDATE (admin)
     xrpcServer.method('org.chaoticharmonylabs.orbit.update', async (ctx: any) => {
@@ -318,6 +324,7 @@ class OrbitsPDS {
         throw xrpcError('InternalServerError', `Failed to update orbit: ${error.message}`)
       }
     })
+    console.log("Registered handler for org.chaoticharmonylabs.orbit.update");
   }
 
   private async parseInput(ctx: any): Promise<any> {
