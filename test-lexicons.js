@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 class OrbitsPDSClient {
-  constructor(baseUrl = 'http://localhost:3000', adminPassword = 'admin123') {
+  constructor(baseUrl = 'http://localhost:3100', adminPassword = 'admin123') {
     this.baseUrl = baseUrl;
     this.xrpcEndpoint = `${baseUrl}/xrpc`;
     this.adminPassword = adminPassword;

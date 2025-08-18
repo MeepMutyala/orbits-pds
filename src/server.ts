@@ -54,7 +54,7 @@ class OrbitsPDS {
 
   async start() {
     const hostname = process.env.PDS_HOSTNAME || 'localhost'
-    const port = parseInt(process.env.PORT || '3000')
+    const port = parseInt(process.env.PORT || '3100')
     
     try {
       // Simple configuration for development - use environment variables

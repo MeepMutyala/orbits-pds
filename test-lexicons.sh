@@ -11,7 +11,7 @@ echo -e "${BLUE}🧪 Testing Orbits PDS Custom Lexicons${NC}"
 echo "======================================"
 echo ""
 
-BASE_URL="http://localhost:3000"
+BASE_URL="http://localhost:3100"
 XRPC_URL="$BASE_URL/xrpc"
 
 # Function to make HTTP requests and pretty print results
@@ -86,6 +86,6 @@ echo "3. Make sure all required environment variables are set"
 echo "4. Try running individual curl commands to debug specific issues"
 echo ""
 echo -e "${YELLOW}Example manual test:${NC}"
-echo "curl -X POST http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.create \\"
+echo "curl -X POST http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.create \\"
 echo "  -H \"Content-Type: application/json\" \\"
 echo "  -d '{\"name\":\"Manual Test\",\"description\":\"Testing manually\"}'"

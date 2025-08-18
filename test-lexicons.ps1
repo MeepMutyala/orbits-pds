@@ -4,7 +4,7 @@ Write-Host "🧪 Testing Orbits PDS Custom Lexicons" -ForegroundColor Blue
 Write-Host "======================================" -ForegroundColor Blue
 Write-Host ""
 
-$baseUrl = "http://localhost:3000"
+$baseUrl = "http://localhost:3100"
 $xrpcUrl = "$baseUrl/xrpc"
 
 function Test-Endpoint {
@@ -81,4 +81,4 @@ Write-Host "3. Make sure all required environment variables are set"
 Write-Host "4. Try running individual curl commands to debug specific issues"
 Write-Host ""
 Write-Host "Example manual test:" -ForegroundColor Yellow
-Write-Host 'Invoke-WebRequest -Uri "http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.create" -Method POST -Headers @{"Content-Type"="application/json"} -Body ''{"name":"Manual Test","description":"Testing manually"}'''
+Write-Host 'Invoke-WebRequest -Uri "http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.create" -Method POST -Headers @{"Content-Type"="application/json"} -Body ''{"name":"Manual Test","description":"Testing manually"}'''

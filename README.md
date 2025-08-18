@@ -68,7 +68,7 @@ npm run build
 npm run dev
 ```
 
-The server will start on `http://localhost:3000` with XRPC endpoints at `http://localhost:3000/xrpc`.
+The server will start on `http://localhost:3100` with XRPC endpoints at `http://localhost:3100/xrpc`.
 
 ## Testing Your Custom Lexicons
 
@@ -99,7 +99,7 @@ chmod +x test-lexicons.sh
 
 #### 1. Create an Orbit
 ```bash
-curl -X POST http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.create \
+curl -X POST http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.create \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Photography",
@@ -112,17 +112,17 @@ curl -X POST http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.create \
 
 #### 2. Get an Orbit
 ```bash
-curl "http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.get?uri=at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1"
+curl "http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.get?uri=at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1"
 ```
 
 #### 3. List Orbits
 ```bash
-curl "http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.list?limit=10"
+curl "http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.list?limit=10"
 ```
 
 #### 4. Update an Orbit
 ```bash
-curl -X POST http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.update \
+curl -X POST http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.update \
   -H "Content-Type: application/json" \
   -d '{
     "uri": "at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1",
@@ -135,7 +135,7 @@ curl -X POST http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.update \
 
 #### Create an Orbit
 ```powershell
-Invoke-WebRequest -Uri "http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.create" `
+Invoke-WebRequest -Uri "http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.create" `
   -Method POST `
   -Headers @{"Content-Type"="application/json"} `
   -Body '{"name":"Photography","description":"Visual content and photos"}'
@@ -143,7 +143,7 @@ Invoke-WebRequest -Uri "http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.
 
 #### Get an Orbit
 ```powershell
-Invoke-WebRequest -Uri "http://localhost:3000/xrpc/org.chaoticharmonylabs.orbit.get?uri=at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1"
+Invoke-WebRequest -Uri "http://localhost:3100/xrpc/org.chaoticharmonylabs.orbit.get?uri=at://did:web:localhost/org.chaoticharmonylabs.orbit.record/1"
 ```
 
 2. **Configure environment**:
@@ -196,7 +196,7 @@ Required:
 - `ADMIN_PASSWORD` - Admin account password
 
 Optional:
-- `PORT` - Server port (default: 3000)
+- `PORT` - Server port (default: 3100)
 - `NODE_ENV` - Environment (development/production)
 - `RECOVERY_KEY` - Recovery key for the service
 
