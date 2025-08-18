@@ -80,7 +80,7 @@ class OrbitsPDS {
         const limit = Number(req.body?.limit) || 50
         
         // Access the PDS database directly
-        const db = (this.pds as any).db
+        const db = (this.pds!.ctx as any).db
         if (!db) {
           return res.status(500).json({ error: 'PDS database not available' })
         }
@@ -140,7 +140,7 @@ class OrbitsPDS {
           return res.status(400).json({ error: 'URI is required' })
         }
 
-        const db = (this.pds as any).db
+        const db = (this.pds!.ctx as any).db
         if (!db) {
           return res.status(500).json({ error: 'PDS database not available' })
         }
@@ -205,7 +205,7 @@ class OrbitsPDS {
         ).toString()
 
         // Store in PDS database
-        const db = (this.pds as any).db
+        const db = (this.pds!.ctx as any).db
         if (!db) {
           return res.status(500).json({ error: 'PDS database not available' })
         }
@@ -245,7 +245,7 @@ class OrbitsPDS {
           return res.status(400).json({ error: 'URI is required' })
         }
 
-        const db = (this.pds as any).db
+        const db = (this.pds!.ctx as any).db
         if (!db) {
           return res.status(500).json({ error: 'PDS database not available' })
         }
