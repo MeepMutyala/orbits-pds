@@ -1,0 +1,24 @@
+{
+  "apps": [
+    {
+      "name": "orbits-pds",
+      "script": "./dist/server.js",
+      "cwd": "/opt/orbits-pds",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "3000",
+        "PDS_HOSTNAME": "pds.chaoticharmonylabs.org",
+        "PDS_DATA_DIRECTORY": "/pds",
+        "PDS_BLOBSTORE_DISK_LOCATION": "/pds/blocks",
+        "PDS_BLOBSTORE": "/pds/blocks",
+        "PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX": "ed8df3181560499ae504bf6df659316660d964c1a4a0fcb7ec8e7df835bb9f83",
+        "PDS_JWT_SECRET": "qY+7T81BUpB9TEd62f86njgbMlueQ3Icy2hAYKn0+h3VK9s1gx3K3YosxzEQ68W5
+8zOpNC0Ge9RSgR4ANsYY5w==",
+        "JWT_SECRET": "qY+7T81BUpB9TEd62f86njgbMlueQ3Icy2hAYKn0+h3VK9s1gx3K3YosxzEQ68W5
+8zOpNC0Ge9RSgR4ANsYY5w==",
+        "ADMIN_PASSWORD": "Sreebushanroop@32",
+        "DATABASE_URL": "postgresql://orbits:Sreebushanroop@32@localhost:5432/orbits_pds"
+      }
+    }
+  ]
+}
