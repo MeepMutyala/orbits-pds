@@ -56,8 +56,9 @@ class OrbitsPDS {
     const secrets = envToSecrets(env)
     this.pds = await PDS.create(config, secrets)
     await this.pds.start()
+    console.log('🔍 PDS context keys:', Object.keys(this.pds!.ctx))
     
-    const port = parseInt(process.env.PORT || '3000')
+    const port = parseInt(process.env.PORT || '3100')
     console.log(`🚀 PDS running on port ${port}`)
 
     // 2) Start custom orbit endpoints on port 3100 
