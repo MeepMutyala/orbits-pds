@@ -1,7 +1,6 @@
 import { PDS, envToCfg, envToSecrets, readEnv } from '@atproto/pds'
 import { Lexicons } from '@atproto/lexicon'
 import { createServer, Server as XrpcServer } from '@atproto/xrpc-server'
-import express from 'express'
 import dotenv from 'dotenv'
 import { requireAdmin, xrpcError } from './auth'
 import fs from 'fs'
