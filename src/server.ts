@@ -63,7 +63,7 @@ class OrbitsPDS {
       process.env.PORT = port.toString()
       process.env.PDS_DATA_DIRECTORY = process.env.PDS_DATA_DIRECTORY || './data'
       process.env.JWT_SECRET = process.env.JWT_SECRET || 'unsafe-dev-secret-change-in-production'
-      process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
+      process.env.ADMIN_PASSWORD = process.env.PDS_ADMIN_PASSWORD || 'admin123'
       
       // Create PDS with environment-based configuration
       const env = readEnv()
