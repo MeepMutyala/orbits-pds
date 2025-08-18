@@ -1,342 +1,130 @@
 import { PDS, envToCfg, envToSecrets, readEnv } from '@atproto/pds'
 import { Lexicons } from '@atproto/lexicon'
 import { createServer, Server as XrpcServer } from '@atproto/xrpc-server'
-import * as fs from 'fs'
-import * as path from 'path'
-import * as dotenv from 'dotenv'
+import express from 'express'
+import dotenv from 'dotenv'
 import { requireAdmin, xrpcError } from './auth'
-import express from "express";
+import fs from 'fs'
+import path from 'path'
 
 dotenv.config()
 
 class OrbitsPDS {
-  private pds: PDS | null = null
-  private lexicons: Map<string, any> = new Map()
-  private lexiconResolver: Lexicons | null = null
-  private xrpc: XrpcServer | null = null
-  private ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
+  private pds!: PDS
+  private xrpc!: XrpcServer
+  private ADMIN_PASSWORD = process.env.PDS_ADMIN_PASSWORD!
 
   constructor() {
-    this.loadCustomLexicons()
-  }
-
-  private loadCustomLexicons() {
-    const baseDir = path.join(__dirname, '../lexicons/org/chaoticharmonylabs')
-    
-    try {
-      const schemas = ['orbit', 'feed', 'user']
-      
-      for (const schema of schemas) {
-        const lexiconDir = path.join(baseDir, schema)
-        
-        if (fs.existsSync(lexiconDir)) {
-          const files = fs.readdirSync(lexiconDir)
-          
-          for (const file of files) {
-            if (file.endsWith('.json')) {
-              const filePath = path.join(lexiconDir, file)
-              const lexiconData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
-              
-              if (lexiconData.id) {
-                this.lexicons.set(lexiconData.id, lexiconData)
-                console.log(`📋 Loaded lexicon: ${lexiconData.id}`)
-              }
-            }
-          }
-        }
-      }
-      
-      // Initialize lexicon resolver first
-      this.lexiconResolver = new Lexicons(Array.from(this.lexicons.values()))
-    } catch (error) {
-      console.error('Error loading lexicons:', error)
+    if (!this.ADMIN_PASSWORD) {
+      throw new Error('Missing PDS_ADMIN_PASSWORD in .env')
     }
   }
 
   async start() {
-    const hostname = process.env.PDS_HOSTNAME || 'localhost'
-    const port = parseInt(process.env.PORT || '3100')
-    
-    try {
-      // Simple configuration for development - use environment variables
-      process.env.NODE_ENV = process.env.NODE_ENV || 'development'
-      process.env.PDS_HOSTNAME = hostname
-      process.env.PORT = port.toString()
-      process.env.PDS_DATA_DIRECTORY = process.env.PDS_DATA_DIRECTORY || './data'
-      process.env.JWT_SECRET = process.env.JWT_SECRET || 'unsafe-dev-secret-change-in-production'
-      process.env.ADMIN_PASSWORD = process.env.PDS_ADMIN_PASSWORD || 'admin123'
-      
-      // Create PDS with environment-based configuration
-      const env = readEnv()
-      const config = envToCfg(env)
-      const secrets = envToSecrets(env)
-      
-      this.pds = await PDS.create(config, secrets)
-      
-      // Create and mount custom XRPC before starting the PDS
-      await this.registerCustomLexicons()
-      
-      const customApp = express();
-      customApp.use(express.json());
-      console.log("XRPC instance:", this.xrpc);
-      customApp.use("/", (this.xrpc as any).router);
-      customApp.listen(3100, () => {
-        console.log("🔹 Custom XRPC endpoints server started at http://localhost:3100/xrpc");
-      });
+    // 1) Load PDS
+    const env = readEnv()
+    const config = envToCfg(env)
+    const secrets = envToSecrets(env)
+    this.pds = await PDS.create(config, secrets)
 
-      await this.pds.start()
-      
-      console.log(`🚀 Orbits PDS running on port ${port}`)
-      console.log(`🌐 Service DID: ${process.env.SERVICE_DID || `did:web:${hostname}`}`)
-      
-      // Determine the public endpoint URL
-      const isProduction = process.env.NODE_ENV === 'production'
-      const publicHostname = process.env.HOSTNAME || hostname
-      const protocol = isProduction ? 'https' : 'http'
-      const portSuffix = (isProduction || port === 80 || port === 443) ? '' : `:${port}`
-      
-      console.log(`🔗 XRPC endpoint: ${protocol}://${publicHostname}${portSuffix}/xrpc`)
-      console.log(`📝 Registered ${this.lexicons.size} custom lexicons`)
-      console.log(`🔒 Admin endpoints protected with header authentication`)
-      
-      this.setupGracefulShutdown()
-    } catch (error) {
-      console.error('❌ Failed to start PDS:', error)
-      throw error
-    }
+    // 2) Build your custom XRPC server
+    const lexicons = this.loadLexicons()
+    this.xrpc = createServer(lexicons)
+    this.registerOrbitHandlers(this.xrpc)
+
+    // 3) Merge into the PDS router (the supported extension API)
+    this.pds.xrpc!.merge(this.xrpc)
+    console.log('✅ SUCCESS: Custom lexicon methods merged into PDS XRPC router')
+
+    // 4) Start PDS
+    await this.pds.start()
+    console.log(`🚀 PDS running on port ${process.env.PORT}`)
+
+    // 5) (Optional) Expose direct Express health check on 3100
+    const app = express()
+    app.get('/health', (_req, res) => res.send('OK'))
+    app.listen(3100, () => console.log('🔹 Health on :3100/health'))
   }
 
-  private async registerCustomLexicons() {
-    if (!this.pds || !this.lexiconResolver) return
-    
-    // Only debug in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 PDS structure:')
-      console.log('- Available properties:', Object.keys(this.pds))
-    }
-    
-    try {
-      // Build a custom XRPC server using the Lexicons resolver for validation
-      this.xrpc = createServer(Array.from(this.lexicons.values()))
-      
-      // Register your handlers (with admin guard on writes)
-      this.registerOrbitHandlers(this.xrpc)
-      
-      // IMPORTANT: merge your custom server into the PDS xrpc router
-      // Try multiple integration approaches with deterministic success reporting
-      
-      // Method 1: Direct XRPC merge (preferred)
-      if ((this.pds as any).xrpc?.merge && typeof (this.pds as any).xrpc.merge === 'function') {
-        ;(this.pds as any).xrpc.merge(this.xrpc)
-        console.log('✅ SUCCESS: Custom lexicon methods merged into PDS XRPC router (Method 1)')
-        return
+  private loadLexicons() {
+    const base = path.join(__dirname, '../lexicons/org/chaoticharmonylabs')
+    const ids: object[] = []
+    for (const sub of ['orbit', 'feed', 'user']) {
+      const dir = path.join(base, sub)
+      if (fs.existsSync(dir)) {
+        for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
+          ids.push(JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')))
+        }
       }
-      console.log(typeof (this.xrpc as any).router)
-      console.warn('⚠️ FAILED: Could not attach custom XRPC to PDS. Check PDS API version.')
-      console.warn('Available PDS properties:', Object.keys(this.pds || {}))
-      if (this.xrpc) {
-        console.warn('Available XRPC properties:', Object.keys(this.xrpc))
-      }
-      
-    } catch (error) {
-      console.error('❌ Error registering custom lexicons:', error)
     }
+    return ids
   }
 
-  private registerOrbitHandlers(xrpcServer: XrpcServer) {
-    console.log("Registering Orbit Handlers!");
-    // LIST (public)
-    xrpcServer.method('org.chaoticharmonylabs.orbit.list', async (ctx: any) => {
-      console.log("orbit.list handler reached!");
-      try {
-        // Parse parameters from various sources
-        const limit = Number(
-          ctx?.params?.limit || 
-          ctx?.req?.query?.limit ||
-          ctx?.req?.url?.match(/limit=(\d+)/)?.[1] ||
-          50
-        )
-        
-        console.log(`📋 Listing orbits (limit: ${limit})`)
-        
-        return {
-          encoding: 'application/json',
-          body: {
-            orbits: [
-              {
-                uri: `at://did:web:${process.env.PDS_HOSTNAME || 'localhost'}/org.chaoticharmonylabs.orbit.record/1`,
-                cid: 'bafyrei' + Math.random().toString(36).substring(7),
-                value: {
-                  name: 'Photography',
-                  description: 'Photos and visual content',
-                  createdAt: new Date().toISOString(),
-                  feeds: {},
-                },
-              },
-              {
-                uri: `at://did:web:${process.env.PDS_HOSTNAME || 'localhost'}/org.chaoticharmonylabs.orbit.record/2`,
-                cid: 'bafyrei' + Math.random().toString(36).substring(7),
-                value: {
-                  name: 'Philosophy',
-                  description: 'Deep thoughts and discussions',
-                  createdAt: new Date().toISOString(),
-                  feeds: {},
-                },
-              },
-            ],
-          },
-        }
-      } catch (error: any) {
-        throw xrpcError('InternalServerError', `Failed to list orbits: ${error.message}`)
-      }
-    })
-    console.log("Registered handler for org.chaoticharmonylabs.orbit.list");
-
-    // GET (public)
-    xrpcServer.method('org.chaoticharmonylabs.orbit.get', async (ctx: any) => {
-      try {
-        const uri = ctx.params?.uri || ctx?.req?.query?.uri
-        if (!uri) {
-          throw xrpcError('InvalidRequest', 'URI parameter is required')
-        }
-        
-        console.log(`📖 Getting orbit: ${uri}`)
-        
-        return {
-          encoding: 'application/json',
-          body: {
-            uri,
-            cid: 'bafyrei' + Math.random().toString(36).substring(7),
-            value: {
-              name: 'Example Orbit',
-              description: 'A sample orbit for testing',
-              createdAt: new Date().toISOString(),
-              feeds: {},
+  private registerOrbitHandlers(xrpc: XrpcServer) {
+    // LIST
+    xrpc.method('org.chaoticharmonylabs.orbit.list', async (ctx) => {
+      console.log('📋 orbit.list reached')
+      const limit = Number(ctx.params.limit) || 50
+      return {
+        encoding: 'application/json',
+        body: {
+          orbits: [
+            {
+              uri: `at://did:web:${process.env.PDS_HOSTNAME}/org.chaoticharmonylabs.orbit.record/1`,
+              cid: 'bafyrei123',
+              value: { name: 'Photography', description: '', createdAt: new Date().toISOString(), feeds: {} },
             },
-          },
-        }
-      } catch (error: any) {
-        if (error.error) throw error // Already an XRPC error
-        throw xrpcError('InternalServerError', `Failed to get orbit: ${error.message}`)
+          ].slice(0, limit),
+        },
       }
     })
-    console.log("Registered handler for org.chaoticharmonylabs.orbit.get");
 
-
-    // CREATE (admin)
-    xrpcServer.method('org.chaoticharmonylabs.orbit.create', async (ctx: any) => {
-      try {
-        requireAdmin(ctx.req?.headers ?? {}, this.ADMIN_PASSWORD)
-        
-        // Parse input from various sources with proper JSON handling
-        const input = await this.parseInput(ctx)
-        
-        // Validate against lexicon schema using the resolver
-        if (this.lexiconResolver) {
-          try {
-            this.lexiconResolver.assertValidRecord('org.chaoticharmonylabs.orbit.record', input)
-          } catch (validationError: any) {
-            throw xrpcError('InvalidRequest', `Invalid orbit data: ${validationError.message}`)
-          }
-        }
-        
-        if (!input.name) {
-          throw xrpcError('InvalidRequest', 'Name is required')
-        }
-        
-        const uri = `at://did:web:${process.env.PDS_HOSTNAME || 'localhost'}/org.chaoticharmonylabs.orbit.record/${Date.now()}`
-        const cid = 'bafyrei' + Math.random().toString(36).substring(7)
-        
-        console.log(`📝 Creating orbit: ${input.name}`)
-        
-        return { 
-          encoding: 'application/json', 
-          body: { uri, cid } 
-        }
-      } catch (error: any) {
-        if (error.error) throw error // Already an XRPC error
-        throw xrpcError('InternalServerError', `Failed to create orbit: ${error.message}`)
+    // GET
+    xrpc.method('org.chaoticharmonylabs.orbit.get', async (ctx) => {
+      console.log('📖 orbit.get reached')
+      const uri = ctx.params.uri
+      if (!uri) throw xrpcError('InvalidRequest', 'uri required')
+      return {
+        encoding: 'application/json',
+        body: { uri, cid: 'bafyrei123', value: { name: 'Photography', description: '', createdAt: new Date().toISOString(), feeds: {} } },
       }
     })
-    console.log("Registered handler for org.chaoticharmonylabs.orbit.create");
 
-    // UPDATE (admin)
-    xrpcServer.method('org.chaoticharmonylabs.orbit.update', async (ctx: any) => {
-      try {
-        requireAdmin(ctx.req?.headers ?? {}, this.ADMIN_PASSWORD)
-        
-        const input = await this.parseInput(ctx)
-        
-        if (!input.uri) {
-          throw xrpcError('InvalidRequest', 'URI is required')
-        }
-        
-        const cid = 'bafyrei' + Math.random().toString(36).substring(7)
-        
-        console.log(`✏️ Updating orbit: ${input.uri}`)
-        
-        return { 
-          encoding: 'application/json', 
-          body: { uri: input.uri, cid } 
-        }
-      } catch (error: any) {
-        if (error.error) throw error // Already an XRPC error
-        throw xrpcError('InternalServerError', `Failed to update orbit: ${error.message}`)
+    // CREATE
+    xrpc.method('org.chaoticharmonylabs.orbit.create', async (ctx) => {
+      console.log('📝 orbit.create reached')
+      requireAdmin(ctx.req.headers, this.ADMIN_PASSWORD)
+      const input = ctx.body
+      if (!input?.name) throw xrpcError('InvalidRequest', 'name required')
+      return {
+        encoding: 'application/json',
+        body: {
+          uri: `at://did:web:${process.env.PDS_HOSTNAME}/org.chaoticharmonylabs.orbit.record/${Date.now()}`,
+          cid: 'bafyrei123',
+        },
       }
     })
-    console.log("Registered handler for org.chaoticharmonylabs.orbit.update");
-    console.log("Available XRPC Methods:", Object.keys((xrpcServer as any).methods || {}));
-  }
 
-  private async parseInput(ctx: any): Promise<any> {
-    // Try various input sources
-    let input = ctx.input ?? ctx.body ?? ctx.req?.body
-
-    // If no input found, try parsing raw request data
-    if (!input && ctx.req) {
-      try {
-        const rawData = await new Promise<string>((resolve) => {
-          let data = ''
-          ctx.req.on('data', (chunk: any) => data += chunk)
-          ctx.req.on('end', () => resolve(data))
-          ctx.req.on('error', () => resolve(''))
-        })
-        
-        input = rawData ? JSON.parse(rawData) : {}
-      } catch {
-        input = {}
+    // UPDATE
+    xrpc.method('org.chaoticharmonylabs.orbit.update', async (ctx) => {
+      console.log('✏️ orbit.update reached')
+      requireAdmin(ctx.req.headers, this.ADMIN_PASSWORD)
+      const input = ctx.body
+      if (!input?.uri) throw xrpcError('InvalidRequest', 'uri required')
+      return {
+        encoding: 'application/json',
+        body: { uri: input.uri, cid: 'bafyrei456' },
       }
-    }
-
-    return input || {}
-  }
-
-  private setupGracefulShutdown() {
-    const shutdown = async (signal: string) => {
-      console.log(`${signal} signal received: closing server`)
-      if (this.pds) {
-        await this.pds.destroy()
-      }
-      process.exit(0)
-    }
-
-    process.on('SIGTERM', () => shutdown('SIGTERM'))
-    process.on('SIGINT', () => shutdown('SIGINT'))
+    })
   }
 }
 
 async function main() {
-  try {
-    const orbits = new OrbitsPDS()
-    await orbits.start()
-  } catch (error) {
-    console.error('Failed to start Orbits PDS:', error)
-    process.exit(1)
-  }
+  const server = new OrbitsPDS()
+  await server.start()
 }
 
-if (require.main === module) {
-  main()
-}
-
-export { OrbitsPDS }
+main().catch(err => {
+  console.error(err)
+  process.exit(1)
+})
