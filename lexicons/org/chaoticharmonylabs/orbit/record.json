@@ -4,10 +4,42 @@
   "defs": {
     "main": {
       "type": "record",
+      "description": "An orbit record for a user-defined orbit/content category.",
       "key": "tid",
       "record": {
-        "type": "ref",
-        "ref": "org.chaoticharmonylabs.orbit.defs#orbit"
+        "type": "object",
+        "required": ["name", "createdAt"],
+        "properties": {
+          "$type": {
+            "type": "string",
+            "const": "org.chaoticharmonylabs.orbit.record"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "feeds": {
+            "type": "object",
+            "properties": {
+              "video": {"type": "string", "format": "at-uri"},
+              "photo": {"type": "string", "format": "at-uri"},
+              "text": {"type": "string", "format": "at-uri"}
+            }
+          }
+        }
       }
     }
   }

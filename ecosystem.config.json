@@ -6,7 +6,7 @@
       "cwd": "/opt/orbits-pds",
       "env": {
         "NODE_ENV": "production",
-        "PORT": "3000",
+        "PORT": "3100",
         "PDS_HOSTNAME": "pds.chaoticharmonylabs.org",
         "PDS_DATA_DIRECTORY": "/pds",
         "PDS_BLOBSTORE_DISK_LOCATION": "/pds/blocks",
