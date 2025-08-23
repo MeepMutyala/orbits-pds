@@ -7,7 +7,7 @@
       "env": {
         "NODE_ENV": "production",
         "PORT": "3100",
-        "PDS_HOSTNAME": "pds.chaoticharmonylabs.org",
+        "PDS_HOSTNAME": "orbits.chaoticharmonylabs.org",
         "PDS_DATA_DIRECTORY": "/pds",
         "PDS_BLOBSTORE_DISK_LOCATION": "/pds/blocks",
         "PDS_BLOBSTORE": "/pds/blocks"
