@@ -1,0 +1,88 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.post",
+  "description": "Content post record",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["feedUri", "content", "createdAt"],
+        "properties": {
+          "feedUri": { "type": "string", "format": "at-uri" },
+          "content": {
+            "type": "union",
+            "refs": ["#textContent", "#photoContent", "#videoContent"]
+          },
+          "caption": { "type": "string", "maxLength": 500 },
+          "reply": { "type": "ref", "ref": "#replyRef" },
+          "embed": {
+            "type": "union",
+            "refs": ["#internalEmbed"]
+          },
+          "repost": { "type": "ref", "ref": "#repostRef" },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "textContent": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 3000 }
+      }
+    },
+    "photoContent": {
+      "type": "object",
+      "required": ["images"],
+      "properties": {
+        "images": {
+          "type": "array",
+          "maxLength": 10,
+          "items": { "type": "blob", "accept": ["image/png","image/jpeg"], "maxSize": 1000000 }
+        }
+      }
+    },
+    "videoContent": {
+      "type": "object",
+      "required": ["video"],
+      "properties": {
+        "video": {
+          "type": "blob",
+          "accept": ["video/mp4","video/webm"],
+          "maxSize": 50000000
+        },
+        "aspectRatio": {
+          "type": "object",
+          "required": ["width","height"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "replyRef": {
+      "type": "object",
+      "required": ["root", "parent"],
+      "properties": {
+        "root": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+        "parent": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+      }
+    },
+    "internalEmbed": {
+      "type": "object",
+      "properties": {
+        "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+      }
+    },
+    "repostRef": {
+      "type": "object",
+      "properties": {
+        "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+        "comment": { "type": "string", "maxLength": 500 }
+      }
+    }
+  }
+}

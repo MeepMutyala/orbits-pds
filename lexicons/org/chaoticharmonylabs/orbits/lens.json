@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.lens",
+  "description": "Lens configuration record",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["name","feedUris","createdAt"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 100 },
+          "description": { "type": "string", "maxLength": 500 },
+          "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "feedUris": {
+            "type": "array",
+            "items": { "type": "string", "format": "at-uri" }
+          },
+          "semanticTopics": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 32 }
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

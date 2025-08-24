@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.defs",
+  "description": "Shared definitions for Orbits platform",
+  "defs": {
+    "mediaType": {
+      "type": "string",
+      "enum": ["text", "photo", "video"],
+      "description": "Type of content in feeds"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "private"],
+      "description": "Orbit visibility setting"
+    },
+    "orbitRef": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" }
+      }
+    },
+    "feedRef": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" }
+      }
+    }
+  }
+}

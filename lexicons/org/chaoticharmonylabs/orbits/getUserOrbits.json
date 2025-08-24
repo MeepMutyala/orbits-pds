@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.getUserOrbits",
+  "description": "Query user’s accessible orbits",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": { "type": "string", "format": "at-identifier" },
+          "limit": { "type": "integer", "default": 25 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["orbits"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "orbits": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#orbitView" }
+            }
+          }
+        }
+      }
+    },
+    "orbitView": {
+      "type": "object",
+      "required": ["uri","title","visibility"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "title": { "type": "string" },
+        "visibility": { "type": "ref", "ref": "org.chaoticharmonylabs.orbits.defs#visibility" },
+        "isGroup": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "datetime" }
+      }
+    }
+  }
+}

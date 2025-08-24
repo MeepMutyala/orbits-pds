@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.share",
+  "description": "Share orbit with another user",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["orbitUri","recipientDid","createdAt"],
+        "properties": {
+          "orbitUri": { "type": "string", "format": "at-uri" },
+          "recipientDid": { "type": "string", "format": "did" },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["view","post","moderate"] },
+            "default": ["view"]
+          },
+          "feedFilter": {
+            "type": "array",
+            "items": { "type": "string", "format": "at-uri" }
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

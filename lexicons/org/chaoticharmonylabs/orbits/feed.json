@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.feed",
+  "description": "Feed record under an orbit",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["orbitUri", "mediaType", "createdAt"],
+        "properties": {
+          "orbitUri": { "type": "string", "format": "at-uri" },
+          "mediaType": {
+            "type": "ref",
+            "ref": "org.chaoticharmonylabs.orbits.defs#mediaType"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 50,
+            "maxGraphemes": 25
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

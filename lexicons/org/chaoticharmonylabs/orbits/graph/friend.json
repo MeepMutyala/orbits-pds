@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.searchOrbits",
+  "description": "Search public orbits",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "query": { "type": "string", "maxLength": 100 },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 32 }
+          },
+          "limit": { "type": "integer", "default": 25 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["orbits"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "orbits": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "org.chaoticharmonylabs.orbits.getUserOrbits#orbitView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

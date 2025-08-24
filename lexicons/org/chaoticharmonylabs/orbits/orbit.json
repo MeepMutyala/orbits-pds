@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.orbit",
+  "description": "Orbit container record",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["title", "visibility", "createdAt"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 100,
+            "maxGraphemes": 50
+          },
+          "visibility": {
+            "type": "ref",
+            "ref": "org.chaoticharmonylabs.orbits.defs#visibility"
+          },
+          "isGroup": {
+            "type": "boolean",
+            "default": false
+          },
+          "contributors": {
+            "type": "array",
+            "items": { "type": "string", "format": "did" }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

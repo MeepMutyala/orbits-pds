@@ -1,0 +1,54 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.getOrbitFeed",
+  "description": "Get posts from a feed",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["feedUri"],
+        "properties": {
+          "feedUri": { "type": "string", "format": "at-uri" },
+          "limit": { "type": "integer", "default": 50 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["posts"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "posts": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#postView" }
+            }
+          }
+        }
+      }
+    },
+    "postView": {
+      "type": "object",
+      "required": ["uri","cid","author","record"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": {
+          "type": "object",
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "handle": { "type": "string" },
+            "displayName": { "type": "string" },
+            "avatar": { "type": "string", "format": "uri" }
+          }
+        },
+        "record": { "type": "unknown" },
+        "likeCount": { "type": "integer" },
+        "replyCount": { "type": "integer" },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    }
+  }
+}
