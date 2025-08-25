@@ -14,8 +14,7 @@
           "recipientDid": { "type": "string", "format": "did" },
           "permissions": {
             "type": "array",
-            "items": { "type": "string", "enum": ["view","post","moderate"] },
-            "default": ["view"]
+            "items": { "type": "string", "enum": ["view","post","moderate"] }
           },
           "feedFilter": {
             "type": "array",

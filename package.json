@@ -11,7 +11,8 @@
     "test:lexicons": "node test-lexicons.js"
   },
   "dependencies": {
-    "@atproto/lexicon": "^0.4.12",
+    "@atproto/lex-cli": "^0.9.2",
+    "@atproto/lexicon": "^0.4.13",
     "@atproto/pds": "^0.4.0",
     "@atproto/syntax": "^0.4.0",
     "@atproto/xrpc-server": "^0.9.0",

@@ -12,7 +12,7 @@
         "properties": {
           "name": { "type": "string", "maxLength": 100 },
           "description": { "type": "string", "maxLength": 500 },
-          "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "color": { "type": "string", "maxLength": 7 },
           "feedUris": {
             "type": "array",
             "items": { "type": "string", "format": "at-uri" }

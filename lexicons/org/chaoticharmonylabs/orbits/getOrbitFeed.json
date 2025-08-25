@@ -36,18 +36,23 @@
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "author": {
-          "type": "object",
-          "properties": {
-            "did": { "type": "string", "format": "did" },
-            "handle": { "type": "string" },
-            "displayName": { "type": "string" },
-            "avatar": { "type": "string", "format": "uri" }
-          }
+          "type": "ref",
+          "ref": "#authorView"
         },
         "record": { "type": "unknown" },
         "likeCount": { "type": "integer" },
         "replyCount": { "type": "integer" },
         "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "authorView": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string" },
+        "displayName": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" }
       }
     }
   }

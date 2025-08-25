@@ -1,0 +1,687 @@
+[
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.defs",
+    "description": "Shared definitions for Orbits platform",
+    "defs": {
+      "mediaType": {
+        "type": "string",
+        "enum": ["text", "photo", "video"],
+        "description": "Type of content in feeds"
+      },
+      "visibility": {
+        "type": "string",
+        "enum": ["public", "private"],
+        "description": "Orbit visibility setting"
+      },
+      "orbitRef": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": {
+          "uri": { "type": "string", "format": "at-uri" },
+          "cid": { "type": "string", "format": "cid" }
+        }
+      },
+      "feedRef": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": {
+          "uri": { "type": "string", "format": "at-uri" },
+          "cid": { "type": "string", "format": "cid" }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.feed",
+    "description": "Feed record under an orbit",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "tid",
+        "record": {
+          "type": "object",
+          "required": ["orbitUri", "mediaType", "createdAt"],
+          "properties": {
+            "orbitUri": { "type": "string", "format": "at-uri" },
+            "mediaType": {
+              "type": "ref",
+              "ref": "org.chaoticharmonylabs.orbits.defs#mediaType"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 50,
+              "maxGraphemes": 25
+            },
+            "createdAt": { "type": "string", "format": "datetime" }
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.getLensFeed",
+    "description": "Get merged posts from a lens",
+    "defs": {
+      "main": {
+        "type": "query",
+        "parameters": {
+          "type": "params",
+          "required": ["lensUri"],
+          "properties": {
+            "lensUri": { "type": "string", "format": "at-uri" },
+            "limit": { "type": "integer", "default": 50 },
+            "cursor": { "type": "string" }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["posts"],
+            "properties": {
+              "cursor": { "type": "string" },
+              "posts": {
+                "type": "array",
+                "items": { "type": "ref", "ref": "org.chaoticharmonylabs.orbits.getOrbitFeed#postView" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.getOrbitFeed",
+    "description": "Get posts from a feed",
+    "defs": {
+      "main": {
+        "type": "query",
+        "parameters": {
+          "type": "params",
+          "required": [
+            "feedUri"
+          ],
+          "properties": {
+            "feedUri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "limit": {
+              "type": "integer",
+              "default": 50
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": [
+              "posts"
+            ],
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "posts": {
+                "type": "array",
+                "items": {
+                  "type": "ref",
+                  "ref": "#postView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "postView": {
+        "type": "object",
+        "required": [
+          "uri",
+          "cid",
+          "author",
+          "record"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid"
+          },
+          "author": {
+            "type": "ref",
+            "ref": "#authorView"
+          },
+          "record": {
+            "type": "unknown"
+          },
+          "likeCount": {
+            "type": "integer"
+          },
+          "replyCount": {
+            "type": "integer"
+          },
+          "indexedAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "authorView": {
+        "type": "object",
+        "required": [
+          "did"
+        ],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.getUserOrbits",
+    "description": "Query user's accessible orbits",
+    "defs": {
+      "main": {
+        "type": "query",
+        "parameters": {
+          "type": "params",
+          "required": ["actor"],
+          "properties": {
+            "actor": { "type": "string", "format": "at-identifier" },
+            "limit": { "type": "integer", "default": 25 },
+            "cursor": { "type": "string" }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["orbits"],
+            "properties": {
+              "cursor": { "type": "string" },
+              "orbits": {
+                "type": "array",
+                "items": { "type": "ref", "ref": "#orbitView" }
+              }
+            }
+          }
+        }
+      },
+      "orbitView": {
+        "type": "object",
+        "required": ["uri","title","visibility"],
+        "properties": {
+          "uri": { "type": "string", "format": "at-uri" },
+          "cid": { "type": "string", "format": "cid" },
+          "title": { "type": "string" },
+          "visibility": { "type": "ref", "ref": "org.chaoticharmonylabs.orbits.defs#visibility" },
+          "isGroup": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.lens",
+    "description": "Lens configuration record",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "tid",
+        "record": {
+          "type": "object",
+          "required": [
+            "name",
+            "feedUris",
+            "createdAt"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "color": {
+              "type": "string",
+              "maxLength": 7
+            },
+            "feedUris": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "at-uri"
+              }
+            },
+            "semanticTopics": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 32
+              }
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.orbit",
+    "description": "Orbit container record",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "tid",
+        "record": {
+          "type": "object",
+          "required": ["title", "visibility", "createdAt"],
+          "properties": {
+            "title": {
+              "type": "string",
+              "maxLength": 100,
+              "maxGraphemes": 50
+            },
+            "visibility": {
+              "type": "ref",
+              "ref": "org.chaoticharmonylabs.orbits.defs#visibility"
+            },
+            "isGroup": {
+              "type": "boolean",
+              "default": false
+            },
+            "contributors": {
+              "type": "array",
+              "items": { "type": "string", "format": "did" }
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.post",
+    "description": "Content post record",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "tid",
+        "record": {
+          "type": "object",
+          "required": [
+            "feedUri",
+            "content",
+            "createdAt"
+          ],
+          "properties": {
+            "feedUri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "content": {
+              "type": "union",
+              "refs": [
+                "#textContent",
+                "#photoContent",
+                "#videoContent"
+              ]
+            },
+            "caption": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "reply": {
+              "type": "ref",
+              "ref": "#replyRef"
+            },
+            "embed": {
+              "type": "union",
+              "refs": [
+                "#internalEmbed"
+              ]
+            },
+            "repost": {
+              "type": "ref",
+              "ref": "#repostRef"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "textContent": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 3000
+          }
+        }
+      },
+      "photoContent": {
+        "type": "object",
+        "required": [
+          "images"
+        ],
+        "properties": {
+          "images": {
+            "type": "array",
+            "maxLength": 10,
+            "items": {
+              "type": "blob",
+              "accept": [
+                "image/png",
+                "image/jpeg"
+              ],
+              "maxSize": 1000000
+            }
+          }
+        }
+      },
+      "videoContent": {
+        "type": "object",
+        "required": [
+          "video"
+        ],
+        "properties": {
+          "video": {
+            "type": "blob",
+            "accept": [
+              "video/mp4",
+              "video/webm"
+            ],
+            "maxSize": 50000000
+          },
+          "aspectRatio": {
+            "type": "ref",
+            "ref": "#aspectRatio"
+          }
+        }
+      },
+      "replyRef": {
+        "type": "object",
+        "required": [
+          "root",
+          "parent"
+        ],
+        "properties": {
+          "root": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          },
+          "parent": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          }
+        }
+      },
+      "internalEmbed": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          }
+        }
+      },
+      "repostRef": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "aspectRatio": {
+        "type": "object",
+        "required": [
+          "width",
+          "height"
+        ],
+        "properties": {
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.searchOrbits",
+    "description": "Search for orbits",
+    "defs": {
+      "main": {
+        "type": "query",
+        "parameters": {
+          "type": "params",
+          "properties": {
+            "q": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "limit": {
+              "type": "integer",
+              "default": 25,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": [
+              "orbits"
+            ],
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "orbits": {
+                "type": "array",
+                "items": {
+                  "type": "ref",
+                  "ref": "#orbitView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "orbitView": {
+        "type": "object",
+        "required": [
+          "uri",
+          "cid",
+          "name",
+          "author"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "author": {
+            "type": "ref",
+            "ref": "#authorView"
+          },
+          "indexedAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "authorView": {
+        "type": "object",
+        "required": [
+          "did"
+        ],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.share",
+    "description": "Share orbit with another user",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "tid",
+        "record": {
+          "type": "object",
+          "required": [
+            "orbitUri",
+            "recipientDid",
+            "createdAt"
+          ],
+          "properties": {
+            "orbitUri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "recipientDid": {
+              "type": "string",
+              "format": "did"
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "view",
+                  "post",
+                  "moderate"
+                ]
+              }
+            },
+            "feedFilter": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "at-uri"
+              }
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.graph.friend",
+    "description": "Mutual friend relationships for private orbit sharing",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "tid",
+        "record": {
+          "type": "object",
+          "required": ["subjectDid", "status", "createdAt"],
+          "properties": {
+            "subjectDid": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of friend applicant or acceptor"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "accepted", "rejected"],
+              "description": "Friend request status"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,57 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.searchOrbits",
+  "description": "Search for orbits",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "q": { "type": "string", "maxLength": 200 },
+          "limit": { "type": "integer", "default": 25, "minimum": 1, "maximum": 100 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["orbits"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "orbits": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#orbitView" }
+            }
+          }
+        }
+      }
+    },
+    "orbitView": {
+      "type": "object",
+      "required": ["uri", "cid", "name", "author"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "author": {
+          "type": "ref",
+          "ref": "#authorView"
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "authorView": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string" },
+        "displayName": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" }
+      }
+    }
+  }
+}

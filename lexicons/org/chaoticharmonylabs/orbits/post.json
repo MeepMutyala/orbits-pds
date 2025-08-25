@@ -54,12 +54,8 @@
           "maxSize": 50000000
         },
         "aspectRatio": {
-          "type": "object",
-          "required": ["width","height"],
-          "properties": {
-            "width": { "type": "integer", "minimum": 1 },
-            "height": { "type": "integer", "minimum": 1 }
-          }
+          "type": "ref",
+          "ref": "#aspectRatio"
         }
       }
     },
@@ -82,6 +78,14 @@
       "properties": {
         "ref": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
         "comment": { "type": "string", "maxLength": 500 }
+      }
+    },
+    "aspectRatio": {
+      "type": "object",
+      "required": ["width","height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
       }
     }
   }
