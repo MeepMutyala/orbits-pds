@@ -1,0 +1,55 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.checkProfile",
+  "description": "Check if a user has an Orbits profile (for new user detection)",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID of the user to check"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["exists", "did"],
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "description": "Whether the user has an Orbits profile"
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "User's DID"
+            },
+            "handle": {
+              "type": "string",
+              "format": "handle",
+              "description": "User's handle"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When the Orbits profile was created (if exists)"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ActorNotFound",
+          "description": "User account does not exist"
+        }
+      ]
+    }
+  }
+}

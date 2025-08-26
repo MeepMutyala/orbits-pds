@@ -59,11 +59,14 @@ function validateAllLexicons() {
     'post.json',
     'searchOrbits.json',
     'share.json',
+    'profile.json',
+    'getProfile.json',
+    'checkProfile.json',
     'graph/friend.json'
   ];
   
   console.log('🔍 Starting AT Protocol Lexicon Validation...\n');
-  console.log('Found 11 lexicon files to validate:\n');
+  console.log('Found 14 lexicon files to validate:\n');
   
   let allValid = true;
   let validCount = 0;

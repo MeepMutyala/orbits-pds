@@ -1,0 +1,140 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.getProfile",
+  "description": "Get user's Orbits profile with relationship-based visibility",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID of the user whose profile to fetch"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["profile"],
+          "properties": {
+            "profile": {
+              "type": "ref",
+              "ref": "#profileView"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ProfileNotFound",
+          "description": "User does not have an Orbits profile"
+        },
+        {
+          "name": "ActorNotFound",
+          "description": "User account does not exist"
+        }
+      ]
+    },
+    "profileView": {
+      "type": "object",
+      "required": ["did", "handle", "hasOrbitProfile"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "handle": {
+          "type": "string",
+          "format": "handle"
+        },
+        "hasOrbitProfile": {
+          "type": "boolean",
+          "description": "Whether user has set up an Orbits profile"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name (visible based on relationship)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Profile description (visible based on relationship)"
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri",
+          "description": "Avatar URL (visible based on relationship)"
+        },
+        "banner": {
+          "type": "string",
+          "format": "uri",
+          "description": "Banner URL (visible based on relationship)"
+        },
+        "relationship": {
+          "type": "ref",
+          "ref": "#relationshipStatus",
+          "description": "Relationship between viewer and profile owner"
+        },
+        "orbitStats": {
+          "type": "ref",
+          "ref": "#orbitStats",
+          "description": "Orbit statistics (visible based on relationship)"
+        },
+        "indexedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "relationshipStatus": {
+      "type": "object",
+      "properties": {
+        "isFriend": {
+          "type": "boolean",
+          "description": "Whether viewer and profile owner are mutual friends"
+        },
+        "isFollowing": {
+          "type": "boolean",
+          "description": "Whether viewer follows profile owner on Bluesky"
+        },
+        "isFollowedBy": {
+          "type": "boolean",
+          "description": "Whether profile owner follows viewer on Bluesky"
+        },
+        "isBlocked": {
+          "type": "boolean",
+          "description": "Whether either party has blocked the other"
+        },
+        "friendRequestSent": {
+          "type": "boolean",
+          "description": "Whether viewer has sent a friend request"
+        },
+        "friendRequestReceived": {
+          "type": "boolean",
+          "description": "Whether viewer has received a friend request"
+        }
+      }
+    },
+    "orbitStats": {
+      "type": "object",
+      "properties": {
+        "totalOrbits": {
+          "type": "integer",
+          "description": "Total number of orbits (filtered by visibility)"
+        },
+        "publicOrbits": {
+          "type": "integer",
+          "description": "Number of public orbits"
+        },
+        "sharedOrbits": {
+          "type": "integer",
+          "description": "Number of orbits shared with viewer"
+        }
+      }
+    }
+  }
+}

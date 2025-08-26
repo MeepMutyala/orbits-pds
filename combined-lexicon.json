@@ -683,5 +683,343 @@
         }
       }
     }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.profile",
+    "description": "Orbits platform user profile extending Bluesky actor profile",
+    "defs": {
+      "main": {
+        "type": "record",
+        "key": "literal:self",
+        "record": {
+          "type": "object",
+          "required": ["createdAt"],
+          "properties": {
+            "displayName": {
+              "type": "string",
+              "maxLength": 64,
+              "maxGraphemes": 64,
+              "description": "Display name for Orbits platform"
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 256,
+              "maxGraphemes": 256,
+              "description": "Profile bio/description"
+            },
+            "avatar": {
+              "type": "blob",
+              "accept": ["image/png", "image/jpeg"],
+              "maxSize": 1000000,
+              "description": "Profile avatar image"
+            },
+            "banner": {
+              "type": "blob",
+              "accept": ["image/png", "image/jpeg"],
+              "maxSize": 1000000,
+              "description": "Profile banner image"
+            },
+            "visibilitySettings": {
+              "type": "ref",
+              "ref": "#visibilitySettings",
+              "description": "Controls what profile information is visible to different relationship types"
+            },
+            "orbitPreferences": {
+              "type": "ref",
+              "ref": "#orbitPreferences",
+              "description": "User preferences for orbit interactions"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "labels": {
+              "type": "union",
+              "refs": ["com.atproto.label.defs#selfLabels"]
+            }
+          }
+        }
+      },
+      "visibilitySettings": {
+        "type": "object",
+        "description": "Defines what profile information is visible to different relationship types",
+        "properties": {
+          "publicVisibility": {
+            "type": "ref",
+            "ref": "#profileVisibility",
+            "description": "What's visible to anyone (public orbits, follows, etc.)"
+          },
+          "friendVisibility": {
+            "type": "ref",
+            "ref": "#profileVisibility",
+            "description": "What's visible to mutual friends"
+          },
+          "blockedVisibility": {
+            "type": "ref",
+            "ref": "#profileVisibility",
+            "description": "What's visible to blocked users (usually minimal)"
+          }
+        }
+      },
+      "profileVisibility": {
+        "type": "object",
+        "description": "Specific visibility settings for profile elements",
+        "properties": {
+          "showDisplayName": {
+            "type": "boolean",
+            "default": true
+          },
+          "showDescription": {
+            "type": "boolean",
+            "default": true
+          },
+          "showAvatar": {
+            "type": "boolean",
+            "default": true
+          },
+          "showBanner": {
+            "type": "boolean",
+            "default": true
+          },
+          "showPublicOrbits": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show public orbits in profile"
+          },
+          "showPrivateOrbits": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show private orbits (only relevant for friends)"
+          },
+          "showOrbitCount": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show total orbit count"
+          }
+        }
+      },
+      "orbitPreferences": {
+        "type": "object",
+        "description": "User preferences for orbit functionality",
+        "properties": {
+          "allowFriendRequests": {
+            "type": "boolean",
+            "default": true,
+            "description": "Allow others to send friend requests"
+          },
+          "allowOrbitInvites": {
+            "type": "boolean",
+            "default": true,
+            "description": "Allow others to invite to orbits"
+          },
+          "defaultOrbitVisibility": {
+            "type": "ref",
+            "ref": "org.chaoticharmonylabs.orbits.defs#visibility",
+            "description": "Default visibility for new orbits"
+          },
+          "autoAcceptFriends": {
+            "type": "boolean",
+            "default": false,
+            "description": "Automatically accept friend requests"
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.getProfile",
+    "description": "Get user's Orbits profile with relationship-based visibility",
+    "defs": {
+      "main": {
+        "type": "query",
+        "parameters": {
+          "type": "params",
+          "required": ["actor"],
+          "properties": {
+            "actor": {
+              "type": "string",
+              "format": "at-identifier",
+              "description": "Handle or DID of the user whose profile to fetch"
+            }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["profile"],
+            "properties": {
+              "profile": {
+                "type": "ref",
+                "ref": "#profileView"
+              }
+            }
+          }
+        },
+        "errors": [
+          {
+            "name": "ProfileNotFound",
+            "description": "User does not have an Orbits profile"
+          },
+          {
+            "name": "ActorNotFound",
+            "description": "User account does not exist"
+          }
+        ]
+      },
+      "profileView": {
+        "type": "object",
+        "required": ["did", "handle", "hasOrbitProfile"],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did"
+          },
+          "handle": {
+            "type": "string",
+            "format": "handle"
+          },
+          "hasOrbitProfile": {
+            "type": "boolean",
+            "description": "Whether user has set up an Orbits profile"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name (visible based on relationship)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Profile description (visible based on relationship)"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri",
+            "description": "Avatar URL (visible based on relationship)"
+          },
+          "banner": {
+            "type": "string",
+            "format": "uri",
+            "description": "Banner URL (visible based on relationship)"
+          },
+          "relationship": {
+            "type": "ref",
+            "ref": "#relationshipStatus",
+            "description": "Relationship between viewer and profile owner"
+          },
+          "orbitStats": {
+            "type": "ref",
+            "ref": "#orbitStats",
+            "description": "Orbit statistics (visible based on relationship)"
+          },
+          "indexedAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "relationshipStatus": {
+        "type": "object",
+        "properties": {
+          "isFriend": {
+            "type": "boolean",
+            "description": "Whether viewer and profile owner are mutual friends"
+          },
+          "isFollowing": {
+            "type": "boolean",
+            "description": "Whether viewer follows profile owner on Bluesky"
+          },
+          "isFollowedBy": {
+            "type": "boolean",
+            "description": "Whether profile owner follows viewer on Bluesky"
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "description": "Whether either party has blocked the other"
+          },
+          "friendRequestSent": {
+            "type": "boolean",
+            "description": "Whether viewer has sent a friend request"
+          },
+          "friendRequestReceived": {
+            "type": "boolean",
+            "description": "Whether viewer has received a friend request"
+          }
+        }
+      },
+      "orbitStats": {
+        "type": "object",
+        "properties": {
+          "totalOrbits": {
+            "type": "integer",
+            "description": "Total number of orbits (filtered by visibility)"
+          },
+          "publicOrbits": {
+            "type": "integer",
+            "description": "Number of public orbits"
+          },
+          "sharedOrbits": {
+            "type": "integer",
+            "description": "Number of orbits shared with viewer"
+          }
+        }
+      }
+    }
+  },
+  {
+    "lexicon": 1,
+    "id": "org.chaoticharmonylabs.orbits.checkProfile",
+    "description": "Check if a user has an Orbits profile (for new user detection)",
+    "defs": {
+      "main": {
+        "type": "query",
+        "parameters": {
+          "type": "params",
+          "required": ["actor"],
+          "properties": {
+            "actor": {
+              "type": "string",
+              "format": "at-identifier",
+              "description": "Handle or DID of the user to check"
+            }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["exists", "did"],
+            "properties": {
+              "exists": {
+                "type": "boolean",
+                "description": "Whether the user has an Orbits profile"
+              },
+              "did": {
+                "type": "string",
+                "format": "did",
+                "description": "User's DID"
+              },
+              "handle": {
+                "type": "string",
+                "format": "handle",
+                "description": "User's handle"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "datetime",
+                "description": "When the Orbits profile was created (if exists)"
+              }
+            }
+          }
+        },
+        "errors": [
+          {
+            "name": "ActorNotFound",
+            "description": "User account does not exist"
+          }
+        ]
+      }
+    }
   }
 ]
