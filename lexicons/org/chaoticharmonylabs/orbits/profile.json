@@ -44,6 +44,11 @@
             "ref": "#orbitPreferences",
             "description": "User preferences for orbit interactions"
           },
+          "onboarding": {
+            "type": "ref",
+            "ref": "#onboarding",
+            "description": "Onboarding tutorial state and progress tracking"
+          },
           "createdAt": {
             "type": "string",
             "format": "datetime"
@@ -136,6 +141,31 @@
           "type": "boolean",
           "default": false,
           "description": "Automatically accept friend requests"
+        }
+      }
+    },
+    "onboarding": {
+      "type": "object",
+      "description": "Onboarding tutorial state and progress tracking for user engagement",
+      "properties": {
+        "tutorialCompleted": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the user has completed the onboarding tutorial"
+        },
+        "tutorialVersion": {
+          "type": "number",
+          "description": "Version of the tutorial the user completed (for tracking updates and re-onboarding)"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the tutorial was completed"
+        },
+        "lastStartedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp when the user last started the tutorial (for analytics and re-engagement)"
         }
       }
     }
