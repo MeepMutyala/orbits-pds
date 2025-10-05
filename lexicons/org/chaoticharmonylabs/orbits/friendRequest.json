@@ -1,0 +1,277 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.friendRequest",
+  "description": "Friend request management for Orbits platform",
+  "defs": {
+    "sendRequest": {
+      "type": "procedure",
+      "description": "Send a friend request to another user",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["recipientDid"],
+          "properties": {
+            "recipientDid": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the user to send friend request to"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid", "status"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["pending"],
+              "description": "Status of the friend request"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "RecipientNotFound",
+          "description": "Recipient user does not exist"
+        },
+        {
+          "name": "AlreadyFriends",
+          "description": "Users are already friends"
+        },
+        {
+          "name": "RequestAlreadySent",
+          "description": "Friend request already sent to this user"
+        },
+        {
+          "name": "RequestAlreadyReceived",
+          "description": "User has already sent you a friend request"
+        },
+        {
+          "name": "Blocked",
+          "description": "Cannot send request - user is blocked"
+        },
+        {
+          "name": "FriendRequestsDisabled",
+          "description": "Recipient has disabled friend requests"
+        }
+      ]
+    },
+    "acceptRequest": {
+      "type": "procedure",
+      "description": "Accept a pending friend request",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["requestUri"],
+          "properties": {
+            "requestUri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "URI of the friend request to accept"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["friendUri", "status"],
+          "properties": {
+            "friendUri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "URI of the created friend relationship"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["accepted"],
+              "description": "Status of the friend request"
+            },
+            "acceptedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "RequestNotFound",
+          "description": "Friend request not found"
+        },
+        {
+          "name": "RequestNotPending",
+          "description": "Friend request is not in pending status"
+        },
+        {
+          "name": "NotRecipient",
+          "description": "You are not the recipient of this friend request"
+        }
+      ]
+    },
+    "rejectRequest": {
+      "type": "procedure",
+      "description": "Reject a pending friend request",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["requestUri"],
+          "properties": {
+            "requestUri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "URI of the friend request to reject"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["rejected"],
+              "description": "Status of the friend request"
+            },
+            "rejectedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "RequestNotFound",
+          "description": "Friend request not found"
+        },
+        {
+          "name": "RequestNotPending",
+          "description": "Friend request is not in pending status"
+        },
+        {
+          "name": "NotRecipient",
+          "description": "You are not the recipient of this friend request"
+        }
+      ]
+    },
+    "getPendingRequests": {
+      "type": "query",
+      "description": "Get pending friend requests (sent and received)",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": ["sent", "received", "all"],
+            "default": "all",
+            "description": "Filter by request direction"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 50,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["requests"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "requests": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#requestView"
+              }
+            }
+          }
+        }
+      }
+    },
+    "requestView": {
+      "type": "object",
+      "required": ["uri", "cid", "requester", "recipient", "status", "createdAt"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        },
+        "requester": {
+          "type": "ref",
+          "ref": "#userView"
+        },
+        "recipient": {
+          "type": "ref",
+          "ref": "#userView"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "accepted", "rejected"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "userView": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "handle": {
+          "type": "string",
+          "format": "handle"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}
+

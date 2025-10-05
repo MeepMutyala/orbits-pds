@@ -1,0 +1,268 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.block",
+  "description": "User blocking functionality for Orbits platform",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subjectDid", "createdAt"],
+        "properties": {
+          "subjectDid": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the user being blocked"
+          },
+          "reason": {
+            "type": "string",
+            "enum": ["spam", "harassment", "inappropriate", "other"],
+            "description": "Reason for blocking (optional)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    },
+    "blockUser": {
+      "type": "procedure",
+      "description": "Block a user",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subjectDid"],
+          "properties": {
+            "subjectDid": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the user to block"
+            },
+            "reason": {
+              "type": "string",
+              "enum": ["spam", "harassment", "inappropriate", "other"],
+              "description": "Reason for blocking (optional)"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid", "status"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["blocked"],
+              "description": "Status of the block action"
+            },
+            "blockedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SubjectNotFound",
+          "description": "User to block does not exist"
+        },
+        {
+          "name": "AlreadyBlocked",
+          "description": "User is already blocked"
+        },
+        {
+          "name": "CannotBlockSelf",
+          "description": "Cannot block yourself"
+        }
+      ]
+    },
+    "unblockUser": {
+      "type": "procedure",
+      "description": "Unblock a user",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subjectDid"],
+          "properties": {
+            "subjectDid": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the user to unblock"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["unblocked"],
+              "description": "Status of the unblock action"
+            },
+            "unblockedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SubjectNotFound",
+          "description": "User to unblock does not exist"
+        },
+        {
+          "name": "NotBlocked",
+          "description": "User is not blocked"
+        }
+      ]
+    },
+    "getBlockedUsers": {
+      "type": "query",
+      "description": "Get list of blocked users",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "default": 50,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["blockedUsers"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "blockedUsers": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#blockedUserView"
+              }
+            }
+          }
+        }
+      }
+    },
+    "checkBlockStatus": {
+      "type": "query",
+      "description": "Check if a user is blocked by you or has blocked you",
+      "parameters": {
+        "type": "params",
+        "required": ["subjectDid"],
+        "properties": {
+          "subjectDid": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the user to check block status for"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["blockStatus"],
+          "properties": {
+            "blockStatus": {
+              "type": "ref",
+              "ref": "#blockStatus"
+            }
+          }
+        }
+      }
+    },
+    "blockedUserView": {
+      "type": "object",
+      "required": ["did", "blockUri", "blockedAt"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "handle": {
+          "type": "string",
+          "format": "handle"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri"
+        },
+        "blockUri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["spam", "harassment", "inappropriate", "other"]
+        },
+        "blockedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "blockStatus": {
+      "type": "object",
+      "required": ["isBlocked", "isBlockedBy"],
+      "properties": {
+        "isBlocked": {
+          "type": "boolean",
+          "description": "Whether the subject is blocked by the viewer"
+        },
+        "isBlockedBy": {
+          "type": "boolean",
+          "description": "Whether the viewer is blocked by the subject"
+        },
+        "blockUri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "URI of the block record (if isBlocked is true)"
+        },
+        "blockedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the block was created (if isBlocked is true)"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["spam", "harassment", "inappropriate", "other"],
+          "description": "Reason for the block (if isBlocked is true)"
+        }
+      }
+    }
+  }
+}
+

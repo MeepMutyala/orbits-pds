@@ -15,6 +15,16 @@
             "maxLength": 100,
             "maxGraphemes": 50
           },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "maxGraphemes": 250
+          },
+          "color": {
+            "type": "string",
+            "format": "color",
+            "maxLength": 7
+          },
           "visibility": {
             "type": "ref",
             "ref": "org.chaoticharmonylabs.orbits.defs#visibility"

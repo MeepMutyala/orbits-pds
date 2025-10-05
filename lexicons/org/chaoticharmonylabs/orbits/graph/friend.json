@@ -8,6 +8,39 @@
       "key": "tid",
       "record": {
         "type": "object",
+        "required": ["subjectDid", "createdAt"],
+        "properties": {
+          "subjectDid": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the friend"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["view", "post", "moderate"]
+            },
+            "default": ["view"],
+            "description": "Permissions granted to this friend for private orbits"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Last time this friend was active"
+          }
+        }
+      }
+    },
+    "request": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
         "required": ["subjectDid", "status", "createdAt"],
         "properties": {
           "subjectDid": {

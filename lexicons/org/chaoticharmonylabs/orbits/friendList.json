@@ -1,0 +1,207 @@
+{
+  "lexicon": 1,
+  "id": "org.chaoticharmonylabs.orbits.friendList",
+  "description": "Friend list management and queries for Orbits platform",
+  "defs": {
+    "getFriends": {
+      "type": "query",
+      "description": "Get user's friend list",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID of the user whose friends to fetch"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 50,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["friends"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "friends": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#friendView"
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ActorNotFound",
+          "description": "User account does not exist"
+        },
+        {
+          "name": "AccessDenied",
+          "description": "Access denied to friend list"
+        }
+      ]
+    },
+    "getMutualFriends": {
+      "type": "query",
+      "description": "Get mutual friends between two users",
+      "parameters": {
+        "type": "params",
+        "required": ["actor1", "actor2"],
+        "properties": {
+          "actor1": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "First user's handle or DID"
+          },
+          "actor2": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Second user's handle or DID"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 25,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["mutualFriends"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "mutualFriends": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#friendView"
+              }
+            },
+            "totalCount": {
+              "type": "integer",
+              "description": "Total number of mutual friends"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ActorNotFound",
+          "description": "One or both user accounts do not exist"
+        }
+      ]
+    },
+    "removeFriend": {
+      "type": "procedure",
+      "description": "Remove a friend from the friend list",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["friendDid"],
+          "properties": {
+            "friendDid": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the friend to remove"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["removed"],
+              "description": "Status of the friend removal"
+            },
+            "removedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "FriendNotFound",
+          "description": "User is not in your friend list"
+        },
+        {
+          "name": "ActorNotFound",
+          "description": "Friend account does not exist"
+        }
+      ]
+    },
+    "friendView": {
+      "type": "object",
+      "required": ["did", "friendUri", "createdAt"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "handle": {
+          "type": "string",
+          "format": "handle"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name (visible based on relationship)"
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri",
+          "description": "Avatar URL (visible based on relationship)"
+        },
+        "friendUri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "URI of the friend relationship record"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the friendship was established"
+        },
+        "lastActiveAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Last activity timestamp"
+        },
+        "sharedOrbits": {
+          "type": "integer",
+          "description": "Number of orbits shared with this friend"
+        }
+      }
+    }
+  }
+}
+

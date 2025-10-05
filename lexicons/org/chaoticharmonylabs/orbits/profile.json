@@ -141,6 +141,23 @@
           "type": "boolean",
           "default": false,
           "description": "Automatically accept friend requests"
+        },
+        "friendRequestNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Receive notifications for friend requests"
+        },
+        "friendActivityNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Receive notifications for friend activity"
+        },
+        "maxFriends": {
+          "type": "integer",
+          "default": 1000,
+          "minimum": 10,
+          "maximum": 5000,
+          "description": "Maximum number of friends allowed"
         }
       }
     },
